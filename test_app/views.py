@@ -6,7 +6,7 @@ from django.http import HttpRequest, HttpResponse
 
 def home_page(request: HttpRequest):
     return HttpResponse(f"""
-        <h1 style="color: #008080;">Hello, Gast!</h1>
+        <h1 style="color: #008080;">Hello, Guest!</h1>
     """)
 
 def user_page(request: HttpRequest, user_name):

@@ -108,11 +108,11 @@ from django.db.models import Q
 
 # В модели SubTask установлен on_delete=models.CASCADE,
 # следовательно, подзадачи удалятся автоматически при удалении задачи
-try:
-    task = Task.objects.get(title="Prepare presentation")
-    task_title = task.title
-    task.delete()
-    print(f"Удалена задача: '{task_title}' и все связанные подзадачи")
-
-except Task.DoesNotExist:
-    print("Задача 'Prepare presentation' не найдена")
+# try:
+#     task = Task.objects.get(title="Prepare presentation")
+#     task_title = task.title
+#     task.delete()
+#     print(f"Удалена задача: '{task_title}' и все связанные подзадачи")
+#
+# except Task.DoesNotExist:
+#     print("Задача 'Prepare presentation' не найдена")
