@@ -18,9 +18,18 @@ from django.contrib import admin
 from django.urls import path
 
 from test_app.views import home_page, user_page
+from test_app.views import create_new_task
+from test_app.views import get_all_tasks
+from test_app.views import get_task_by_id
+from test_app.views import get_tasks_statistics
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_page),                       # Домашняя страница
     path('user/<str:user_name>/', user_page),  # Страница пользователя
+    path('api/v1/tasks/', get_all_tasks),
+    path('api/v1/tasks/<int:task_id>/',get_task_by_id),
+    path('api/v1/tasks/create/', create_new_task),
+    path('api/v1/tasks/statistics/', get_tasks_statistics),
+
 ]
