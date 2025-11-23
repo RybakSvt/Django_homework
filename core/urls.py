@@ -17,11 +17,19 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from test_app.views import home_page, user_page
-from test_app.views import create_new_task
-from test_app.views import get_all_tasks
-from test_app.views import get_task_by_id
-from test_app.views import get_tasks_statistics
+from test_app.views import (
+    home_page,
+    user_page,
+    create_new_task,
+    get_all_tasks,
+    get_task_by_id,
+    get_tasks_statistics,
+    SubTaskListCreateView,
+    SubTaskDetailUpdateDeleteView,
+    CategoryListCreateView,
+    CategoryDetailUpdateDeleteView
+)
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -31,5 +39,9 @@ urlpatterns = [
     path('api/v1/tasks/<int:task_id>/',get_task_by_id),
     path('api/v1/tasks/create/', create_new_task),
     path('api/v1/tasks/statistics/', get_tasks_statistics),
-
+    path ('api/v1/subtasks/', SubTaskListCreateView.as_view()),
+    path('api/v1/tasks/<int:task_id>/subtasks/', SubTaskListCreateView.as_view()),
+    path('api/v1/subtasks/<int:subtask_id>/', SubTaskDetailUpdateDeleteView.as_view()),
+    path('api/v1/categories/', CategoryListCreateView.as_view()),
+    path('api/v1/categories/<int:category_id>/', CategoryDetailUpdateDeleteView.as_view() )
 ]

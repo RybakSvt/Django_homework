@@ -5,8 +5,8 @@ from .models import Category, Task, SubTask
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name']
-    search_fields = ['name']
+    list_display = ['name',]
+    search_fields = ['name',]
     list_per_page = 20
 
 

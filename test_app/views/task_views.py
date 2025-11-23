@@ -11,7 +11,7 @@ from django.db.models import Count, Q
 from datetime import datetime
 
 
-@api_view(['Get',])
+@api_view(['GET',])
 def get_all_tasks(request: Request) -> Response:
     tasks = Task.objects.all()
     tasks_dto = TaskListSerializer(tasks, many=True)
@@ -50,7 +50,10 @@ def create_new_task(request: Request) -> Response:
         task_dto.save()
     except Exception as exc:
         return Response(
-            data = {"error": f"Ошибка сохранения задачи {str(exc)}"},
+            data = {
+                "error": f"Ошибка сохранения задачи",
+                "detail": str(exc)
+                    },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     return Response(
@@ -64,7 +67,9 @@ def get_tasks_statistics(request: Request) -> Response:
 
     total_tasks = Task.objects.count()
 
-    tasks_by_status = Task.objects.values('status').annotate(count=Count('id'))
+    tasks_by_status = (Task.objects
+                       .values('status')
+                       .annotate(count=Count('id')))
 
     overdue_tasks = Task.objects.filter(
         deadline__lt=datetime.now().date()
