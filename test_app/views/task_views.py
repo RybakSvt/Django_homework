@@ -71,9 +71,13 @@ def get_tasks_statistics(request: Request) -> Response:
                        .values('status')
                        .annotate(count=Count('id')))
 
-    overdue_tasks = Task.objects.filter(
+    # overdue_tasks = Task.objects.filter(
+    #     deadline__lt=datetime.now().date()
+    # ).count()
+
+    overdue_tasks = Task.objects.filter(              #правильный вариант с подсчетом просроченных задач, у которых нет статуса 'Done'
         deadline__lt=datetime.now().date()
-    ).count()
+    ).exclude(status='Done').count()
 
     statistics = {
         'total_tasks': total_tasks,
