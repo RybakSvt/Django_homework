@@ -1,20 +1,47 @@
+from django.db.models.functions import ExtractWeekDay
 from django.http import HttpRequest, HttpResponse
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework import status
 from rest_framework.decorators import api_view
-from test_app.serializers import TaskCreateSerializer
-from test_app.serializers import TaskListSerializer
-from test_app.serializers import TaskDetailSerializer
+
+from test_app.serializers import (
+    TaskCreateSerializer,
+    TaskListSerializer,
+    TaskDetailSerializer,
+)
+
 from test_app.models import Task
 from django.db.models import Count, Q
 from datetime import datetime
 
 
+WEEK_DAY_MAP = {
+    "monday": 2,
+    "tuesday": 3,
+    "wednesday": 4,
+    "thursday": 5,
+    "friday": 6,
+    "saturday": 7,
+    "sunday": 1
+}
+
+
+def get_filtered_queryset(request, query_params):
+    tasks = Task.objects.all()
+    week_day = query_params.get('week_day', '').lower().strip()
+    if week_day:
+        week_day_num = WEEK_DAY_MAP.get(week_day)
+        tasks = tasks.annotate(
+            week_day_num=ExtractWeekDay('deadline')
+        ).filter(week_day_num=week_day_num)
+    return tasks
+
+
 @api_view(['GET',])
 def get_all_tasks(request: Request) -> Response:
-    tasks = Task.objects.all()
-    tasks_dto = TaskListSerializer(tasks, many=True)
+    tasks_queryset = get_filtered_queryset(request, request.query_params)
+    tasks_dto = TaskListSerializer(tasks_queryset, many=True)
     return Response(
         data=tasks_dto.data,
         status=status.HTTP_200_OK
