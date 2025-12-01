@@ -1,108 +1,144 @@
-from django.db.models.functions import ExtractWeekDay
 from django.http import HttpRequest, HttpResponse
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters, status
+from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
-from rest_framework.request import Request
-from rest_framework import status
 from rest_framework.decorators import api_view
+from datetime import datetime
 
 from test_app.serializers import (
     TaskCreateSerializer,
     TaskListSerializer,
     TaskDetailSerializer,
 )
-
 from test_app.models import Task
-from django.db.models import Count, Q
-from datetime import datetime
+from django.db.models import Count
 
 
 WEEK_DAY_MAP = {
+    "sunday": 1,
     "monday": 2,
     "tuesday": 3,
     "wednesday": 4,
     "thursday": 5,
     "friday": 6,
-    "saturday": 7,
-    "sunday": 1
+    "saturday": 7
 }
 
 
-def get_filtered_queryset(request, query_params):
-    tasks = Task.objects.all()
-    week_day = query_params.get('week_day', '').lower().strip()
-    if week_day:
-        week_day_num = WEEK_DAY_MAP.get(week_day)
-        tasks = tasks.annotate(
-            week_day_num=ExtractWeekDay('deadline')
-        ).filter(week_day_num=week_day_num)
-    return tasks
+class TaskListCreateView(ListCreateAPIView):
+    queryset = Task.objects.all()
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'deadline']     # (/?status=, /?deadline=) Фильтрация по статусу и дедлайну
+    search_fields = ['title', 'description']      # (/?search= ) Поиск по заголовку и описанию
+    ordering_fields = ['created_at']              # (/?ordering= ) Сортировка по дате создания
+    ordering = ['-created_at']                    # Сортировка по умолчанию
 
 
-@api_view(['GET',])
-def get_all_tasks(request: Request) -> Response:
-    tasks_queryset = get_filtered_queryset(request, request.query_params)
-    tasks_dto = TaskListSerializer(tasks_queryset, many=True)
-    return Response(
-        data=tasks_dto.data,
-        status=status.HTTP_200_OK
-    )
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return TaskCreateSerializer
+        return TaskListSerializer
 
 
-@api_view(['GET',])
-def get_task_by_id(request: Request, task_id: int) -> Response:
-    try:
-        task = Task.objects.get(pk=task_id)
-    except Task.DoesNotExist:
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        week_day = self.request.query_params.get('week_day', '').lower().strip()
+        if week_day and (week_day_num := WEEK_DAY_MAP.get(week_day)):
+            queryset = queryset.filter(deadline__week_day=week_day_num)
+
+        return queryset
+
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            self.perform_create(serializer)
+        except Exception as exc:
+            return Response(
+                data={
+                    "error": "Ошибка сохранения задачи",
+                    "detail": str(exc)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
         return Response(
-            data={"error": f"Задачи с id={task_id} в базе не найдено"},
-            status=status.HTTP_404_NOT_FOUND
+            data=serializer.data,
+            status=status.HTTP_201_CREATED
         )
 
-    task_dto =TaskDetailSerializer(task)
-    return Response(
-        data=task_dto.data,
-        status=status.HTTP_200_OK
-    )
+
+class TaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
+    queryset = Task.objects.all()
+    serializer_class = TaskDetailSerializer
+    lookup_field = 'id'
 
 
-@api_view(['POST',])
-def create_new_task(request: Request) -> Response:
-    task_dto = TaskCreateSerializer(data=request.data)
-    if not task_dto.is_valid():
-        return Response(
-            data=task_dto.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    try:
-        task_dto.save()
-    except Exception as exc:
-        return Response(
-            data = {
-                "error": f"Ошибка сохранения задачи",
-                "detail": str(exc)
-                    },
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        )
-    return Response(
-        data=task_dto.data,
-        status=status.HTTP_201_CREATED
-    )
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return TaskCreateSerializer
+        return TaskDetailSerializer
+
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+        if not serializer.is_valid():
+            return Response(
+                data=serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            self.perform_update(serializer)
+        except Exception as exc:
+            return Response(
+                data={
+                    "error": "Ошибка обновления задачи",
+                    "detail": str(exc)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        try:
+            self.perform_destroy(instance)
+        except Exception as exc:
+            return Response(
+                data={
+                    "error": "Ошибка удаления задачи",
+                    "detail": str(exc)
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+
 
 
 @api_view(['GET'])
-def get_tasks_statistics(request: Request) -> Response:
-
+def get_tasks_statistics(request):
     total_tasks = Task.objects.count()
 
     tasks_by_status = (Task.objects
                        .values('status')
                        .annotate(count=Count('id')))
 
-    # overdue_tasks = Task.objects.filter(
-    #     deadline__lt=datetime.now().date()
-    # ).count()
-
-    overdue_tasks = Task.objects.filter(              #правильный вариант с подсчетом просроченных задач, у которых нет статуса 'Done'
+    overdue_tasks = Task.objects.filter(
         deadline__lt=datetime.now().date()
     ).exclude(status='Done').count()
 
@@ -116,11 +152,6 @@ def get_tasks_statistics(request: Request) -> Response:
         data=statistics,
         status=status.HTTP_200_OK
     )
-
-
-
-
-
 
 
 def home_page(request: HttpRequest):
