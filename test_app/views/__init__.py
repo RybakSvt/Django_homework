@@ -1,7 +1,6 @@
 __all__ = [
-    'get_all_tasks',
-    'get_task_by_id',
-    'create_new_task',
+    'TaskListCreateView',
+    'TaskDetailUpdateDeleteView',
     'get_tasks_statistics',
     'home_page',
     'user_page',
@@ -12,9 +11,8 @@ __all__ = [
 ]
 
 from .task_views import (
-    get_all_tasks,
-    get_task_by_id,
-    create_new_task,
+    TaskListCreateView,
+    TaskDetailUpdateDeleteView,
     get_tasks_statistics,
     home_page,
     user_page,
@@ -29,3 +27,5 @@ from .categories_views import (
     CategoryListCreateView,
     CategoryDetailUpdateDeleteView,
 )
+
+

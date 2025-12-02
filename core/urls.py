@@ -15,33 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 
 from test_app.views import (
     home_page,
     user_page,
-    create_new_task,
-    get_all_tasks,
-    get_task_by_id,
-    get_tasks_statistics,
-    SubTaskListCreateView,
-    SubTaskDetailUpdateDeleteView,
-    CategoryListCreateView,
-    CategoryDetailUpdateDeleteView
 )
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home_page),                       # Домашняя страница
-    path('user/<str:user_name>/', user_page),  # Страница пользователя
-    path('api/v1/tasks/', get_all_tasks),
-    path('api/v1/tasks/<int:task_id>/',get_task_by_id),
-    path('api/v1/tasks/create/', create_new_task),
-    path('api/v1/tasks/statistics/', get_tasks_statistics),
-    path ('api/v1/subtasks/', SubTaskListCreateView.as_view()),
-    path('api/v1/tasks/<int:task_id>/subtasks/', SubTaskListCreateView.as_view()),
-    path('api/v1/subtasks/<int:subtask_id>/', SubTaskDetailUpdateDeleteView.as_view()),
-    path('api/v1/categories/', CategoryListCreateView.as_view()),
-    path('api/v1/categories/<int:category_id>/', CategoryDetailUpdateDeleteView.as_view() )
+    #path('', home_page),                       # Домашняя страница
+    path('user/<str:user_name>/', user_page),   # Страница пользователя
+    path('api/v1/', include('routers')),
 ]
