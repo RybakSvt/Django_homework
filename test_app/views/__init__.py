@@ -6,8 +6,7 @@ __all__ = [
     'user_page',
     'SubTaskListCreateView',
     'SubTaskDetailUpdateDeleteView',
-    'CategoryListCreateView',
-    'CategoryDetailUpdateDeleteView',
+    'CategoryViewSet',
 ]
 
 from .task_views import (
@@ -24,8 +23,5 @@ from .subtasks_views import (
 )
 
 from .categories_views import (
-    CategoryListCreateView,
-    CategoryDetailUpdateDeleteView,
+    CategoryViewSet
 )
-
-

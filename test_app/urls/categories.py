@@ -1,7 +1,10 @@
-from django.urls import path
-from test_app.views import CategoryListCreateView, CategoryDetailUpdateDeleteView
+# УДАЛЕНО: Все маршруты перенесены в routers.py через CategoryViewSet
+urlpatterns = []
 
-urlpatterns = [
-    path('', CategoryListCreateView.as_view()),
-    path('<int:id>/', CategoryDetailUpdateDeleteView.as_view())
-]
+# from django.urls import path
+# from test_app.views import CategoryListCreateView, CategoryDetailUpdateDeleteView
+#
+# urlpatterns = [
+#     path('', CategoryListCreateView.as_view()),
+#     path('<int:id>/', CategoryDetailUpdateDeleteView.as_view())
+# ]

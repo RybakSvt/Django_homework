@@ -1,13 +1,44 @@
 from django.contrib import admin, messages
-
 from .models import Category, Task, SubTask
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name',]
-    search_fields = ['name',]
+    list_display = ['name', 'is_deleted', 'deleted_at']
+    list_filter = ['is_deleted']  # Добавили фильтр
+    search_fields = ['name', ]
     list_per_page = 20
+
+    actions = ['restore_selected']  # Добавили action
+
+    # Метод для показа всех категорий в админке
+    def get_queryset(self, request):
+        # Используем базовый менеджер, а не наш кастомный
+        return Category._base_manager.all()
+
+    # Action для восстановления
+    @admin.action(description="Восстановить выбранные категории")
+    def restore_selected(self, request, queryset):
+        count = queryset.filter(is_deleted=True).count()
+        for category in queryset.filter(is_deleted=True):
+            category.restore()
+        self.message_user(
+            request,
+            f"Восстановлено {count} категорий",
+            messages.SUCCESS
+        )
+
+    # Action для полного удаления
+    @admin.action(description="Полностью удалить выбранные")
+    def hard_delete_selected(self, request, queryset):
+        count = queryset.count()
+        for category in queryset:
+            category.delete(hard=True)
+        self.message_user(
+            request,
+            f"Полностью удалено {count} категорий из БД",
+            messages.SUCCESS
+        )
 
 
 class SubTaskInline(admin.TabularInline):
