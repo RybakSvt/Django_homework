@@ -1,11 +1,56 @@
 from django.db import models
+from django.utils import timezone
+from .managers import CategoryManager
 
 
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name="Название категории")
 
+    # Поля для мягкого удаления
+    is_deleted = models.BooleanField(default=False, verbose_name="Удалено")
+    deleted_at = models.DateTimeField(null=True, blank=True, verbose_name="Дата удаления")
+
+
+    objects = CategoryManager()  # Кастомный менеджер По умолчанию показывает только неудалённые
+
+
     def __str__(self):
         return self.name
+
+
+    def soft_delete(self):
+        """Метод мягкого удаления"""
+        self.is_deleted = True
+        self.deleted_at = timezone.now()
+        self.save(update_fields=['is_deleted', 'deleted_at'])
+
+        # import logging
+        # logger = logging.getLogger(__name__)
+        # logger.info(f"Категория '{self.name}' помечена как удалённая")
+
+
+    def restore(self):
+        """Восстановление из удалённых"""
+        self.is_deleted = False
+        self.deleted_at = None
+        self.save(update_fields=['is_deleted', 'deleted_at'])
+
+        # import logging
+        # logger = logging.getLogger(__name__)
+        # logger.info(f"Категория '{self.name}' восстановлена")
+
+
+    def delete(self, *args, **kwargs):
+        """Переопределение стандартного удаления с поддержкой hard delete"""
+        if kwargs.pop('hard', False):
+
+            # import logging
+            # logger = logging.getLogger(__name__)
+            # logger.info(f"Категория '{self.name}' полностью удалена из БД")
+            super().delete(*args, **kwargs)
+        else:  # мягкое удаление по умолчанию
+            self.soft_delete()
+
 
     class Meta:
         db_table = 'task_manager_category'
