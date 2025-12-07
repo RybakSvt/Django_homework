@@ -2,7 +2,7 @@ from rest_framework import filters, status
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.pagination import PageNumberPagination
-
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from test_app.models import SubTask, Task
@@ -32,6 +32,8 @@ class SubTaskListCreateView(ListCreateAPIView):
     serializer_class = SubTaskSerializer
     pagination_class = SubTaskPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+
+    permission_classes = [IsAuthenticated]
 
     # Фильтр через query params: ?status=, ?deadline=
     filterset_fields = ['status', 'deadline']
@@ -106,6 +108,7 @@ class SubTaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     serializer_class = SubTaskSerializer
     lookup_field = 'id'
 
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
