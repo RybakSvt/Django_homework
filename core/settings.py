@@ -12,11 +12,12 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from environ import Env
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-LOGS_DIR = BASE_DIR / 'logs'
-LOGS_DIR.mkdir(exist_ok=True)
+# LOGS_DIR = BASE_DIR / 'logs'
+# LOGS_DIR.mkdir(exist_ok=True)
 
 env = Env()
 env.read_env(str(BASE_DIR / ".env"))
@@ -43,6 +44,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'django_filters',
 
     'test_app.apps.TestAppConfig',
@@ -121,64 +124,86 @@ AUTH_PASSWORD_VALIDATORS = [
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'paginators.OverrideCursorPaginator',
     'PAGE_SIZE': 6,
+
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.IsAuthenticated',
+    # ],
+
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'TOKEN_TYPE_CLAIM': 'token_type'
 }
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LOGGING = {
-    'version': 1,
-
-    'disable_existing_loggers': False,
-
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',       # Формат: УРОВЕНЬ ВРЕМЯ МОДУЛЬ СООБЩЕНИЕ
-            'style': '{',
-        },
-    },
-
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',             # Использовать формат 'verbose'
-        },
-
-        'http_file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': str(LOGS_DIR / 'http_logs.log'),
-            'formatter': 'verbose',
-        },
-
-        'db_file': {
-            'level': 'DEBUG',                   # SQL-запросы на уровне DEBUG
-            'class': 'logging.FileHandler',
-            'filename': str(LOGS_DIR / 'db_logs.log'),
-            'formatter': 'verbose',
-        },
-    },
-
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
-        },
-
-        'django.request': {
-            'handlers': ['http_file'],
-            'level': 'INFO',
-            'propagate': False,   # Не передавать родителю ('django'), чтобы не дублировалось
-        },
-
-        'django.db.backends': {
-            'handlers': ['db_file'],
-            'level': 'DEBUG',
-            'propagate': False,    # Не дублировать в другие обработчики
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#
+#     'disable_existing_loggers': False,
+#
+#     'formatters': {
+#         'verbose': {
+#             'format': '{levelname} {asctime} {module} {message}',       # Формат: УРОВЕНЬ ВРЕМЯ МОДУЛЬ СООБЩЕНИЕ
+#             'style': '{',
+#         },
+#     },
+#
+#     'handlers': {
+#         'console': {
+#             'level': 'INFO',
+#             'class': 'logging.StreamHandler',
+#             'formatter': 'verbose',             # Использовать формат 'verbose'
+#         },
+#
+#         'http_file': {
+#             'level': 'INFO',
+#             'class': 'logging.FileHandler',
+#             'filename': str(LOGS_DIR / 'http_logs.log'),
+#             'formatter': 'verbose',
+#         },
+#
+#         'db_file': {
+#             'level': 'DEBUG',                   # SQL-запросы на уровне DEBUG
+#             'class': 'logging.FileHandler',
+#             'filename': str(LOGS_DIR / 'db_logs.log'),
+#             'formatter': 'verbose',
+#         },
+#     },
+#
+#     'loggers': {
+#         'django': {
+#             'handlers': ['console'],
+#             'level': 'INFO',
+#         },
+#
+#         'django.request': {
+#             'handlers': ['http_file'],
+#             'level': 'INFO',
+#             'propagate': False,   # Не передавать родителю ('django'), чтобы не дублировалось
+#         },
+#
+#         'django.db.backends': {
+#             'handlers': ['db_file'],
+#             'level': 'DEBUG',
+#             'propagate': False,    # Не дублировать в другие обработчики
+#         },
+#     },
+# }
 
 LANGUAGE_CODE = 'en-us'
 

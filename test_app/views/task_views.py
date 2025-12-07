@@ -3,7 +3,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from datetime import datetime
 
 from test_app.serializers import (
@@ -12,6 +13,7 @@ from test_app.serializers import (
     TaskDetailSerializer,
 )
 from test_app.models import Task
+from test_app.permissions import IsAuthenticatedForModification
 from django.db.models import Count
 
 
@@ -34,6 +36,8 @@ class TaskListCreateView(ListCreateAPIView):
     ordering_fields = ['created_at']              # (/?ordering= ) Сортировка по дате создания
     ordering = ['-created_at']                    # Сортировка по умолчанию
 
+    # ПЕРМИШЕНЫ: Чтение всем, создание только авторизованным
+    permission_classes = [IsAuthenticatedForModification]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -79,6 +83,9 @@ class TaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = TaskDetailSerializer
     lookup_field = 'id'
+
+    # ПЕРМИШЕНЫ: Только авторизованные
+    permission_classes = [IsAuthenticated]
 
 
     def get_serializer_class(self):
@@ -131,6 +138,7 @@ class TaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])  # Только авторизованные
 def get_tasks_statistics(request):
     total_tasks = Task.objects.count()
 

@@ -2,10 +2,15 @@ from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAdminUser
+from rest_framework.permissions import (
+    IsAuthenticatedOrReadOnly,
+    IsAdminUser,
+    IsAuthenticated,
+)
 
 from test_app.models import Category
 from test_app.serializers import CategorySerializer, CategoryCreateSerializer
+from test_app.permissions import IsAdminOrReadOnly
 
 
 class CategoryViewSet(viewsets.ModelViewSet):
@@ -14,12 +19,23 @@ class CategoryViewSet(viewsets.ModelViewSet):
     Поддерживает мягкое удаление и полное удаление (только для админов).
     """
     queryset = Category.objects.all()  # Использует наш менеджер - покажет только неудалённые
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [IsAdminOrReadOnly]
+
 
     def get_serializer_class(self):
         if self.request.method in ['POST', 'PUT', 'PATCH']:
             return CategoryCreateSerializer
         return CategorySerializer
+
+
+    def get_permissions(self):
+        # Кастомизация для разных действий
+        if self.action == 'hard_delete':
+            return [IsAdminUser()]  # Только админы
+        elif self.action in ['restore', 'deleted', 'count_tasks']:
+            return [IsAuthenticated()]  # Все авторизованные
+        return super().get_permissions()
+
 
     def destroy(self, request, *args, **kwargs):
         """
