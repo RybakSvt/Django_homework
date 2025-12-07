@@ -15,6 +15,8 @@ from environ import Env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
 
 env = Env()
 env.read_env(str(BASE_DIR / ".env"))
@@ -116,9 +118,67 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'paginators.OverrideCursorPaginator',
+    'PAGE_SIZE': 6,
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
+
+LOGGING = {
+    'version': 1,
+
+    'disable_existing_loggers': False,
+
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',       # Формат: УРОВЕНЬ ВРЕМЯ МОДУЛЬ СООБЩЕНИЕ
+            'style': '{',
+        },
+    },
+
+    'handlers': {
+        'console': {
+            'level': 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',             # Использовать формат 'verbose'
+        },
+
+        'http_file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': str(LOGS_DIR / 'http_logs.log'),
+            'formatter': 'verbose',
+        },
+
+        'db_file': {
+            'level': 'DEBUG',                   # SQL-запросы на уровне DEBUG
+            'class': 'logging.FileHandler',
+            'filename': str(LOGS_DIR / 'db_logs.log'),
+            'formatter': 'verbose',
+        },
+    },
+
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+        },
+
+        'django.request': {
+            'handlers': ['http_file'],
+            'level': 'INFO',
+            'propagate': False,   # Не передавать родителю ('django'), чтобы не дублировалось
+        },
+
+        'django.db.backends': {
+            'handlers': ['db_file'],
+            'level': 'DEBUG',
+            'propagate': False,    # Не дублировать в другие обработчики
+        },
+    },
+}
 
 LANGUAGE_CODE = 'en-us'
 
