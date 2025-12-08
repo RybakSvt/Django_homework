@@ -29,14 +29,19 @@ class TaskCreateSerializer(serializers.ModelSerializer):
 class TaskListSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
 
+    # Владелец виден при чтении
+    owner_username = serializers.CharField(source='owner.username', read_only=True)
+
     class Meta:
         model = Task
         fields = [
+            'id',
             'title',
             'description',
             'status',
             'deadline',
-            'categories'
+            'categories',
+            'owner_username'
         ]
 
 class TaskDetailSerializer(serializers.ModelSerializer):

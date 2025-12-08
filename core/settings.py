@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
+    'drf_yasg',
     'django_filters',
 
     'test_app.apps.TestAppConfig',
@@ -120,6 +121,10 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+SWAGGER_SETTINGS = {
+    'USE_SESSION_AUTH': True
+}
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'paginators.OverrideCursorPaginator',

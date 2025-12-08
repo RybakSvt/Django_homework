@@ -7,11 +7,13 @@ __all__ = [
     'SubTaskListCreateView',
     'SubTaskDetailUpdateDeleteView',
     'CategoryViewSet',
+    'MyTasksView',
 ]
 
 from .task_views import (
     TaskListCreateView,
     TaskDetailUpdateDeleteView,
+    MyTasksView,
     get_tasks_statistics,
     home_page,
     user_page,

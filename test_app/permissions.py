@@ -1,6 +1,26 @@
 from rest_framework import permissions
 
 
+class IsOwnerOrReadOnly(permissions.BasePermission):
+    """
+    Разрешает редактирование только владельцу объекта.
+    Для задач и подзадач.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+
+        if hasattr(obj, 'owner'):
+            return obj.owner == request.user
+        elif hasattr(obj, 'user'):
+            return obj.user == request.user
+        elif hasattr(obj, 'author'):
+            return obj.author == request.user
+
+        return False
+
+
 class IsAdminOrReadOnly(permissions.BasePermission):
     """
     Разрешает чтение всем, запись только администраторам.

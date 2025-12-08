@@ -1,7 +1,11 @@
 from django.http import HttpRequest, HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status
-from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
+from rest_framework.generics import (
+    ListCreateAPIView,
+    RetrieveUpdateDestroyAPIView,
+    ListAPIView
+)
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -13,7 +17,7 @@ from test_app.serializers import (
     TaskDetailSerializer,
 )
 from test_app.models import Task
-from test_app.permissions import IsAuthenticatedForModification
+from test_app.permissions import IsAuthenticatedForModification, IsOwnerOrReadOnly
 from django.db.models import Count
 
 
@@ -54,6 +58,10 @@ class TaskListCreateView(ListCreateAPIView):
         return queryset
 
 
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if not serializer.is_valid():
@@ -85,7 +93,7 @@ class TaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     lookup_field = 'id'
 
     # ПЕРМИШЕНЫ: Только авторизованные
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
 
     def get_serializer_class(self):
@@ -95,8 +103,8 @@ class TaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
 
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
         instance = self.get_object()
+        partial = kwargs.pop('partial', False)
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
 
         if not serializer.is_valid():
@@ -134,6 +142,24 @@ class TaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
             )
 
         return Response(data={}, status=status.HTTP_204_NO_CONTENT)
+
+
+class MyTasksView(ListAPIView):
+    """
+    Получить задачи текущего пользователя.
+    """
+    serializer_class = TaskListSerializer
+    permission_classes = [IsAuthenticated]
+
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['status', 'deadline']
+    search_fields = ['title', 'description']
+    ordering_fields = ['created_at', 'deadline']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        return Task.objects.filter(owner=self.request.user)
+
 
 
 
