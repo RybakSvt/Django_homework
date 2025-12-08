@@ -18,11 +18,17 @@ class SubTaskCreateSerializer(serializers.ModelSerializer):
 
 
 class SubTaskSerializer(serializers.ModelSerializer):
+
+    owner_username = serializers.CharField(source='owner.username', read_only=True)
+
     class Meta:
         model = SubTask
         fields = [
+            'id',
             'title',
             'description',
             'status',
             'deadline',
+            'owner_username',
+            'task',
         ]

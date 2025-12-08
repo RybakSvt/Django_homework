@@ -51,8 +51,8 @@ class SubTaskInline(admin.TabularInline):
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
     inlines = [SubTaskInline]
-    list_display = ['abb_title', 'status', 'deadline', 'created_at']
-    list_filter = ['status', 'categories', 'created_at']
+    list_display = ['abb_title', 'owner', 'status', 'deadline', 'created_at']
+    list_filter = ['status', 'owner', 'categories', 'created_at']
     search_fields = ['title', 'description']
     filter_horizontal = ['categories']
     date_hierarchy = 'created_at'
@@ -84,8 +84,8 @@ class TaskAdmin(admin.ModelAdmin):
 
 @admin.register(SubTask)
 class SubTaskAdmin(admin.ModelAdmin):
-    list_display = ['title', 'task', 'status', 'deadline', 'created_at']
-    list_filter = ['status', 'created_at']
+    list_display = ['title', 'task', 'owner', 'status', 'deadline', 'created_at']
+    list_filter = ['status', 'owner', 'created_at']
     search_fields = ['title', 'description']
     raw_id_fields = ['task']
     date_hierarchy = 'created_at'

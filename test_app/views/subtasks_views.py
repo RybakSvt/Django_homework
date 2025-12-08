@@ -7,6 +7,7 @@ from rest_framework.response import Response
 
 from test_app.models import SubTask, Task
 from test_app.serializers import SubTaskCreateSerializer, SubTaskSerializer
+from test_app.permissions import IsOwnerOrReadOnly
 
 
 class SubTaskPagination(PageNumberPagination):
@@ -33,7 +34,7 @@ class SubTaskListCreateView(ListCreateAPIView):
     pagination_class = SubTaskPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     # Фильтр через query params: ?status=, ?deadline=
     filterset_fields = ['status', 'deadline']
@@ -58,6 +59,12 @@ class SubTaskListCreateView(ListCreateAPIView):
         if self.request.method == 'POST':
             return SubTaskCreateSerializer
         return SubTaskSerializer
+
+
+    def perform_create(self, serializer):
+        task_id = self.kwargs.get('task_id')
+        task = Task.objects.get(id=task_id)
+        serializer.save(task=task, owner=self.request.user)
 
 
     def create(self, request, *args, **kwargs):
@@ -87,7 +94,8 @@ class SubTaskListCreateView(ListCreateAPIView):
             )
 
         try:
-            subtask = serializer.save(task=task)
+            self.perform_create(serializer)
+            subtask = serializer.instance
         except Exception as exc:
             return Response(
                 data={
@@ -108,7 +116,7 @@ class SubTaskDetailUpdateDeleteView(RetrieveUpdateDestroyAPIView):
     serializer_class = SubTaskSerializer
     lookup_field = 'id'
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:

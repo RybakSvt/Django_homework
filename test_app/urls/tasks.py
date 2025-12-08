@@ -4,6 +4,7 @@ from test_app.views import (
     TaskDetailUpdateDeleteView,
     get_tasks_statistics,
     SubTaskListCreateView,
+    MyTasksView,
 )
 
 urlpatterns = [
@@ -11,4 +12,5 @@ urlpatterns = [
     path('<int:id>/', TaskDetailUpdateDeleteView.as_view()),
     path('statistics/', get_tasks_statistics),
     path('<int:task_id>/subtasks/', SubTaskListCreateView.as_view()),
+    path('my_tasks/', MyTasksView.as_view()),
 ]

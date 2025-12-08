@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 from django.utils import timezone
 from .managers import CategoryManager
 
@@ -69,6 +70,16 @@ class Task(models.Model):
 
     title = models.CharField(max_length=200, unique=True, verbose_name="Название задачи")
     description = models.TextField(blank=True, verbose_name="Описание задачи")
+
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='tasks',
+        null=True,
+        blank=True,
+        verbose_name="Владелец"
+    )
+
     categories = models.ManyToManyField(Category, blank=True, verbose_name="Категории задачи")
     status = models.CharField(
         max_length=20,
@@ -100,6 +111,16 @@ class SubTask(models.Model):
 
     title = models.CharField(max_length=200, unique=True, verbose_name="Название подзадачи")
     description = models.TextField(blank=True, verbose_name="Описание подзадачи")
+
+    owner = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='subtasks',
+        null=True,
+        blank=True,
+        verbose_name="Владелец"
+    )
+
     task = models.ForeignKey(
         Task,
         on_delete=models.CASCADE,
