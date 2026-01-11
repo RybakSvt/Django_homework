@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h3>Статус задачи изменён</h3>
+    <p><b>Задача:</b> {{ task_title }}</p>
+    <p><b>Был:</b> {{ old_status|default:"Новый" }}</p>
+    <p><b>Стал:</b> {{ new_status }}</p>
+
+    {% if is_closing %}
+    <p><b>Задача закрыта</b></p>
+    {% endif %}
+
+    <p><small>Автоматическое уведомление</small></p>
+</body>
+</html>
